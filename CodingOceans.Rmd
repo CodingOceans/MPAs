@@ -52,6 +52,16 @@ x$londec = measurements::conv_unit(x$lon, from = 'deg_dec_min', to = 'dec_deg')
 SpeciesOccurence <- occurrence(geometry = "POLYGON ((-119.41 34.0, -119.41 34.08, -119.36 34.08, -119.36 34.006, -119.41 34.0)) ")
 
 # <- occurrence(geometry = "POLYGON ((-117.32 32.83, -117.34 32.83, -117.33 32.80, -117.32 32.80, -117.32 32.83)) ")
+
+animals = filter(SpeciesOccurence, kingdom == "Animalia") %filtering the dataframe to pull out the animals
+sort(table(animals$scientificName), decreasing = TRUE)[1:10] %finding the 10 animals that occur most often in the dataframe
+kelpBass = filter(SpeciesOccurence, scientificName == "Paralabrax clathratus") %since kelpbass is the most commonly occuring animal, pull out info on the kelp bass
+
+ggplot(kelpBass, aes(x = date_year)) + 
+  geom_histogram(color = "darkblue", fill = "lightblue") + 
+  labs(title = "Kelp Bass in Anacapa State Marine Reserve", x = "Year", y = "# of Kelp Bass") % make a histogram showing the kelp bass count from 2006 through 2020
+
+
 ```
 
 
