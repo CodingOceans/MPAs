@@ -1,0 +1,57 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an R Notebook! Here is some information about how this file works:
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+Now let's get started. The first thing we'll want to do in
+
+```{r}
+#loading robis
+installed <- rownames(installed.packages())
+if ( !("robis" %in% installed) ){
+   if ( !("remotes" %in% installed) )install.packages("remotes")
+   remotes::install_github("iobis/robis")
+}
+
+#load libraries
+library(robis)
+library('ggplot2')
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(roperators)
+library(dplyr)
+library(magrittr) 
+library(vegan)
+library(leaflet)
+library(measurements)
+```
+
+```{r}
+x = data.frame(lat = c("32°49.573", "32°47.945",  "32°47.945", "32°49.573", "32°49.573"),
+               lon = c("-117°19.000", "-117°20.528", "-117°20.068", "-117°19.000", "-117°19.000"))
+
+x$lat = gsub('°', ' ', x$lat)
+x$lon = gsub('°', ' ', x$lon)
+#convert from decimalminute to decimal degree
+x$latdec = measurements::conv_unit(x$lat, from = 'deg_dec_min', to = 'dec_deg')
+x$londec = measurements::conv_unit(x$lon, from = 'deg_dec_min', to = 'dec_deg')
+```
+
+```{r}
+SpeciesOccurence <- occurrence(geometry = "POLYGON ((-119.41 34.0, -119.41 34.08, -119.36 34.08, -119.36 34.006, -119.41 34.0)) ")
+
+# <- occurrence(geometry = "POLYGON ((-117.32 32.83, -117.34 32.83, -117.33 32.80, -117.32 32.80, -117.32 32.83)) ")
+```
+
+
