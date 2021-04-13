@@ -120,6 +120,13 @@ ScrippsLatitude = Geo$V2 #Latitude is saved as Variable 2
 POLYGON = list(Polygon = list(c(Longitude, Latitude)))
 
 
+POLYGON  = list(c(ScrippsLongitude, ScrippsLatitude))
+
+
+x = st_cast(POLYGON, "POLYGON")
+x = polygon(POLYGON)
+
+
 WKPOLYGON = geojson2wkt(POLYGON$Polygon)
 
 taxa <- checklist(geometry = "POLYGON ((2.3 51.8, 2.3 51.6, 2.6 51.6, 2.6 51.8, 2.3 51.8))")
