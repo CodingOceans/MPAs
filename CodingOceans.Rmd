@@ -14,9 +14,8 @@ First, we'll need to load in some data that has information on all of the Marine
 install.packages("sf")
 library("sf")
 
-# loading our database by setting dsn to the directory where the shape file lives
-# and layer to the name of the shape file without the file extension (.shp)
-DataBase = read_sf(dsn = "/Users/vanessazobell/Documents/SIO/Outreach/mpa_inventory_2014_public_shp", layer = "mpa_inventory_2014_public_shp")
+# loading our database by setting the directory where the shape file lives with the file extension (.shp)
+DataBase = st_read("C:/Users/nposd/Documents/Outreach/MPAs/mpa_inventory_2014_public_shp.shp")
 
 ```
 
@@ -105,80 +104,29 @@ library("wellknown")
 
 
 ```
-Let's look into a specific Marine Protected Area now. 
-
-
+Let's choose a specific Marine Protected Area we want to learn more about. 
 ```{r}
-
-Scripps = filter(California, Site_Name == "Scripps Coastal Reserve")
-
-ScrippsGeo = as.data.frame(California[[25]][[1]][[1]][[1]]) #the geometry is in the 25th column
-ScrippsLongitude = Geo$V1 #Longitude is saved as Variable 1
-ScrippsLatitude = Geo$V2 #Latitude is saved as Variable 2
-
-
-POLYGON = list(Polygon = list(c(Longitude, Latitude)))
-
-
-POLYGON  = list(c(ScrippsLongitude, ScrippsLatitude))
-
-
-x = st_cast(POLYGON, "POLYGON")
-x = polygon(POLYGON)
-
-
-WKPOLYGON = geojson2wkt(POLYGON$Polygon)
-
-taxa <- checklist(geometry = "POLYGON ((2.3 51.8, 2.3 51.6, 2.6 51.6, 2.6 51.8, 2.3 51.8))")
-taxa <- checklist(geometry = POLYGON)
-
-
-mp <- list(MultiPoint = matrix(c(100, 101, 3.14, 3.101, 2.1, 2.18)))
-
-
-
-poly <- list(Polygon = list(
-matrix(c(100.001, 101.1, 101.001, 100.001, 0.001, 0.001, 1.001, 0.001), ncol = 2)))
-geojson2wkt(poly)
-geojson2wkt(poly, fmt=6)
-
-
-
-SpeciesOccurence <- occurrence(geometry = poly)
-taxa <- checklist(geometry = poly)
-
-
-
-
-
-x = data.frame(lat = c("32°49.573", "32°47.945",  "32°47.945", "32°49.573", "32°49.573"),
-               lon = c("-117°19.000", "-117°20.528", "-117°20.068", "-117°19.000", "-117°19.000"))
-
-x$lat = gsub('°', ' ', x$lat)
-x$lon = gsub('°', ' ', x$lon)
-#convert from decimalminute to decimal degree
-x$latdec = measurements::conv_unit(x$lat, from = 'deg_dec_min', to = 'dec_deg')
-x$londec = measurements::conv_unit(x$lon, from = 'deg_dec_min', to = 'dec_deg')
+SiteName = ('Scripps Coastal Reserve') #Look at the California data frame in your global environment...
+# and choose the MPA you want to learn more about
+ChosenMPA = filter(California, Site_Name == SiteName) #filter for that specific MPA
+#get the MPA polygon ready
+ChosenMPA_hull = st_convex_hull(ChosenMPA$geometry)
+ChosenMPA_text = st_as_text(ChosenMPA_hull)
+```
+Introduce OBIS
+```{r}
+SpeciesOccurence = occurrence(geometry = ChosenMPA_text)
 ```
 
+
 ```{r}
 
-
-
-
-taxa <- checklist(geometry = "POLYGON ((2.3 51.8, 2.3 51.6, 2.6 51.6, 2.6 51.8, 2.3 51.8))")
-taxa <- checklist(geometry = POLYGON)
-taxa = geometry(occurence())
-
-latlon = rbind(Longitude, Latitude)
-
-# <- occurrence(geometry = "POLYGON ((-117.32 32.83, -117.34 32.83, -117.33 32.80, -117.32 32.80, -117.32 32.83)) ")
-
 animals = filter(SpeciesOccurence, kingdom == "Animalia") #filtering the dataframe to pull out the animals
-sort(table(animals$scientificName), decreasing = TRUE)[1:10] #finding the 10 animals that occur most often in the dataframe
-kelpBass = filter(SpeciesOccurence, scientificName == "Paralabrax clathratus") #since kelpbass is the most commonly occuring animal, pull out info on the kelp bass
+TenAnimals = data.frame(sort(table(animals$scientificName), decreasing = TRUE)[1:10]) #finding the 10 animals that occur most often in the dataframe
+print(TenAnimals)
+MostCommon_Animal = filter(SpeciesOccurence, scientificName == TenAnimals$Var1[[1]]) #since kelpbass is the most commonly occuring animal, pull out info on the kelp bass
 
-ggplot(kelpBass, aes(x = date_year)) + 
+ggplot(MostCommon_Animal, aes(x = date_year)) + 
   geom_histogram(color = "darkblue", fill = "lightblue") + 
   labs(title = "Kelp Bass in Anacapa State Marine Reserve", x = "Year", y = "# of Kelp Bass") # make a histogram showing the kelp bass count from 2006 through 2020
 
