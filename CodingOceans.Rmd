@@ -3,6 +3,26 @@ title: "Marine Protected Area Activity"
 output: html_notebook
 ---
 
+Some R packages will need to be installed so that we can see exactly what is going in with our data. Run the code chunk below to install the packages necessary for this activity. If the package is already installed, the script will only load the package without re-installing it.
+
+```{r}
+## First specify the packages of interest
+packages = c("sf", "robis","RColorBrewer",
+             "ggplot2", "dplyr", "leaflet")
+
+## Now load or install&load all
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
+```
+
+
 The U.S. has established nearly 1,000 Marine Protected Areas to protect important places in our ocean, estuaries, coastal waters, and Great Lakes. Marine Protected Areas strive to combat climate change, conserve cultural heritage, and protect marine organisms. 
 
 Marine protected areas allow for ecological connectivity, and serve as protected "stepping stones" for marine organisms. Let's make a map so that we can see all of these stepping stones off of the Coast of California.
@@ -10,23 +30,14 @@ Marine protected areas allow for ecological connectivity, and serve as protected
 First, we'll need to load in some data that has information on all of the Marine Protected Areas in the United States. The data is in the form of a "shape file". We will load this file and call it "DataBase". 
 
 ```{r}
-#install and load the "sf" package to read in the databse
-install.packages("sf")
-library("sf")
-
 # loading our database by setting the directory where the shape file lives with the file extension (.shp)
 DataBase = st_read("C:/Users/nposd/Documents/Outreach/MPAs/mpa_inventory_2014_public_shp.shp")
-
 ```
 
 For this example, let's look at the Marine Protected areas off the Coast of California. When looking at our database, we see that there is a column titled "State", and each row contains the state that the Marine Protected Area is in. We will filter our database to pull out all of the Marine Protected Areas that are in the "State" of "California" using the following code chunk. We will call this new database "California". 
 
 ```{r}
-# install and load the "dplyr" package to help us filter our data
-library(dplyr)
-
 California = filter(DataBase, State == "California")
-
 ```
 
 There are 185 Marine Protected Areas in our California database! Let's make a map to see all of the boundaries of the Marine Protected Areas. The "geometry" column has the information of the boundaries. The geometry will give us the latitude and longitude, which we will use to plot the boundary of each Marine Protected Area on our map. 
@@ -35,15 +46,11 @@ To set up the map, we will first map a blank map of the state of California. We 
 
 
 ```{r}
-# install and load the leaflet package so that we can make our map
-library(leaflet)
-
 CaliforniaMap = leaflet() %>% # start an empty map
    addProviderTiles("Esri.OceanBasemap") %>% # add the ocean basemap 
    fitBounds( -124, 41, -116, 32) # zoom in to the california area
 
 CaliforniaMap # print the map
-
 ```
 Nice! Now let's add the boundaries of all of the Marine Protected Areas that are on the California Coast. We will loop through each individual Marine Protected area, and plot the latitudes and longitudes on our California map, that way, we can see ALL of the Marine Protected Areas on our map together. We will use "addPolygons" to add each Marine Protected Area's boundary. You can pick the color that you would like to make the boundary in the "color" section of "addPolygons". For this example, I made the color red, but you can change it to whatever color you would like!
 
@@ -63,22 +70,9 @@ CaliforniaMap = CaliforniaMap  %>%
 
 CaliforniaMap # print the map
 ```
-```
 
-```
-Wow, California has a LOT of Marine Protected Areas! Let's analyze some data from Marine Protected Areas in California to see exactly how they have helped in the protection of marine organisms! We will need to connect to an online databases to access information about marine organisms. Additionally, some packages in R will need to be installed so that we can see exactly what is going in with our data. Run the code chunk below to install the packages necessary for this activity. 
+Wow, California has a LOT of Marine Protected Areas! Let's analyze some data from Marine Protected Areas in California to see exactly how they have helped in the protection of marine organisms! We will need to connect to an online databases to access information about marine organisms. 
 
-```{r}
-#load libraries
-install.packages("robis")
-library(robis)
-library('ggplot2')
-
-```
-```
-
-
-```
 Let's choose a specific Marine Protected Area we want to learn more about. 
 ```{r}
 SiteName = ('Soquel Canyon State Marine Conservation Area')  #Look at the California data frame in your global environment...
@@ -88,10 +82,13 @@ ChosenMPA = filter(California, Site_Name == SiteName) #filter for that specific 
 ChosenMPA_hull = st_convex_hull(ChosenMPA$geometry)
 ChosenMPA_text = st_as_text(ChosenMPA_hull)
 ```
+
 Introduce OBIS
 ```{r}
 SpeciesOccurence = occurrence(geometry = ChosenMPA_text)
 ```
+
+Sum up the unique species.
 ```{r}
 # Let's sum up the unique species that occur in the chosen MPA
 if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is an available column..
@@ -109,7 +106,6 @@ We'll start with visualizing the different phyla that exist within the MPA. A ph
 ```{r}
 Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum) #aggregate the data by phyla
 
-library(RColorBrewer)
 # Define the number of colors you want
 nb.cols <- 18
 mycolors <- colorRampPalette(brewer.pal(8, "Blues"))(nb.cols)
