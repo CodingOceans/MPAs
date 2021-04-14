@@ -73,31 +73,6 @@ Wow, California has a LOT of Marine Protected Areas! Let's analyze some data fro
 install.packages("robis")
 library(robis)
 library('ggplot2')
-install.packages("rnaturalearth")
-library("rnaturalearth")
-install.packages("rnaturalearthdata")
-library("rnaturalearthdata")
-library(roperators)
-install.packages("roperators")
-
-library(magrittr) 
-install.packages("vegan")
-library(vegan)
-
-install.packages("measurements")
-library(measurements)
-
-installed <- rownames(installed.packages())
-if ( !("robis" %in% installed) ){
-   if ( !("remotes" %in% installed) )install.packages("remotes")
-   remotes::install_github("iobis/robis")
-}
-library("robis")
-
-install.packages("wellknown")
-install.packages("V8")
-library("V8")
-library("wellknown")
 
 ```
 ```
@@ -106,7 +81,7 @@ library("wellknown")
 ```
 Let's choose a specific Marine Protected Area we want to learn more about. 
 ```{r}
-SiteName = ('Scripps Coastal Reserve') #Look at the California data frame in your global environment...
+SiteName = ('Soquel Canyon State Marine Conservation Area')  #Look at the California data frame in your global environment...
 # and choose the MPA you want to learn more about
 ChosenMPA = filter(California, Site_Name == SiteName) #filter for that specific MPA
 #get the MPA polygon ready
@@ -133,6 +108,11 @@ We'll start with visualizing the different phyla that exist within the MPA. A ph
 
 ```{r}
 Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum) #aggregate the data by phyla
+
+library(RColorBrewer)
+# Define the number of colors you want
+nb.cols <- 18
+mycolors <- colorRampPalette(brewer.pal(8, "Blues"))(nb.cols)
 
 #Create a pie chart to visualize the proportion of phyla found in the MPA
 bp<- ggplot(Phylum, aes(x="", y=x, fill=Category))+
