@@ -117,6 +117,23 @@ Introduce OBIS
 ```{r}
 SpeciesOccurence = occurrence(geometry = ChosenMPA_text)
 ```
+```{r}
+if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is an available column..
+  SpeciesOccurence$individualCount <- suppressWarnings(as.numeric(SpeciesOccurence$individualCount)) #introduces NAs
+  SpeciesOccurence$individualCount[is.na(SpeciesOccurence$individualCount)] <- 1 #convert NANs to 1; I'm assuming that if it's listed, there was at least one count
+  SpeciesOccurence$Count <- 1 * SpeciesOccurence$individualCount #make a new column for Counts of each species
+} else {
+  SpeciesOccurence$Count = 1 #if individualCount is not a column, I'm assuming that if it's listed there was at least 1 count
+}
+
+#data visualization
+Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum)
+bp<- ggplot(Phylum, aes(x="", y=x, fill=Category))+
+  geom_bar(width = 1, stat = "identity")
+pie = bp + coord_polar("y", start=0)
+pie + scale_fill_brewer("Blues") +
+  theme(axis.text.x = element_blank())
+```
 
 
 ```{r}
