@@ -118,6 +118,7 @@ Introduce OBIS
 SpeciesOccurence = occurrence(geometry = ChosenMPA_text)
 ```
 ```{r}
+# Let's sum up the unique species that occur in the chosen MPA
 if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is an available column..
   SpeciesOccurence$individualCount <- suppressWarnings(as.numeric(SpeciesOccurence$individualCount)) #introduces NAs
   SpeciesOccurence$individualCount[is.na(SpeciesOccurence$individualCount)] <- 1 #convert NANs to 1; I'm assuming that if it's listed, there was at least one count
@@ -125,9 +126,15 @@ if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is a
 } else {
   SpeciesOccurence$Count = 1 #if individualCount is not a column, I'm assuming that if it's listed there was at least 1 count
 }
+```
 
-#data visualization
-Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum)
+Now that our data is ready, let's visualize it and see what patterns we can find! 
+We'll start with visualizing the different phyla that exist within the MPA. A phylum is a level of classification or taxonmic rank that allows scientists to categrozie animals. Mammals are in the chordate phylum while insects, spiders, millipeds, and crustaceans are in the arthropod phylum. Let's look to see what phyla exist in this MPA.
+
+```{r}
+Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum) #aggregate the data by phyla
+
+#Create a pie chart to visualize the proportion of phyla found in the MPA
 bp<- ggplot(Phylum, aes(x="", y=x, fill=Category))+
   geom_bar(width = 1, stat = "identity")
 pie = bp + coord_polar("y", start=0)
