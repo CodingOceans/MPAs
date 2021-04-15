@@ -99,12 +99,25 @@ if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is a
 
 It's time to start visualizing our data!
 
+First let's look at what time period our samples were from by plotting a histogram of the years the samples were taken.
+```{r}
+ggplot(SpeciesOccurence, aes(x=date_year)) + geom_histogram(binwidth = 1)+
+  labs(title="Histogram of Observation Year", x="Year", y = "Count")
+```
+
+Now let's look at what depth our samples were from by plotting a histogram of the maximum depth the samples were taken.
+```{r}
+ggplot(SpeciesOccurence, aes(x=maximumDepthInMeters)) + geom_histogram(binwidth = 10)+
+  labs(title="Histogram of Maximum Sample Depth in meters", x="Depth (meters)", y = "Count")
+```
+
 We'll start with visualizing the different phyla that exist within the MPA. A phylum is a level of classification or taxonmic rank that allows scientists to categrozie animals. Mammals are in the chordate phylum while insects, spiders, millipeds, and crustaceans are in the arthropod phylum. Let's look to see what phyla exist in this MPA.
 
 ```{r}
 Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum) #aggregate the data by phyla
 
 #Create a pie chart to visualize the proportion of phyla found in the MPA
+#find the percentages for each phyla
 data = Phylum %>% 
   mutate(per=x/sum(x)) %>% 
   arrange(desc(Category))
@@ -126,19 +139,21 @@ if (nrow(data) > 8){
 }
 ```
 
-
+Let's look at the top then animals that were observed in the MPA.
 ```{r}
-
 animals = filter(SpeciesOccurence, kingdom == "Animalia") #filtering the dataframe to pull out the animals
 TenAnimals = data.frame(sort(table(animals$scientificName), decreasing = TRUE)[1:10]) #finding the 10 animals that occur most often in the dataframe
 print(TenAnimals)
-MostCommon_Animal = filter(SpeciesOccurence, scientificName == TenAnimals$Var1[[1]]) #since kelpbass is the most commonly occuring animal, pull out info on the kelp bass
+```
 
+Now let's take a look at the most common animal in the MPA and see when it occured.
+```{r}
+MostCommon_Animal = filter(SpeciesOccurence, scientificName == TenAnimals$Var1[[1]]) #filter for the most commonly occuring animal
+
+#Plot the most commonly occuring animal in the MPA over time to see when it occured and how many of them were observed at that time
 ggplot(MostCommon_Animal, aes(x = date_year)) + 
   geom_histogram(color = "darkblue", fill = "lightblue") + 
-  labs(title = "Kelp Bass in Anacapa State Marine Reserve", x = "Year", y = "# of Kelp Bass") # make a histogram showing the kelp bass count from 2006 through 2020
-
-
+  labs(title = "Histogram of Most Commonly Occuring Animal in the MPA", x = "Year", y = "# of Kelp Bass") # make a histogram showing the most commonly occuring animal
 ```
 
 
