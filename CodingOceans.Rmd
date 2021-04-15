@@ -6,7 +6,7 @@ output: html_notebook
 Some R packages will need to be installed so that we can see exactly what is going in with our data. Run the code chunk below to install the packages necessary for this activity. If the package is already installed, the script will only load the package without re-installing it.
 
 ```{r}
-## First specify the packages of interest
+## First specify the packages of interest -- if you need to any packages in the future, add them here
 packages = c("sf", "robis","RColorBrewer",
              "ggplot2", "dplyr", "leaflet")
 
@@ -21,7 +21,6 @@ package.check <- lapply(
   }
 )
 ```
-
 
 The U.S. has established nearly 1,000 Marine Protected Areas to protect important places in our ocean, estuaries, coastal waters, and Great Lakes. Marine Protected Areas strive to combat climate change, conserve cultural heritage, and protect marine organisms. 
 
@@ -43,7 +42,6 @@ California = filter(DataBase, State == "California")
 There are 185 Marine Protected Areas in our California database! Let's make a map to see all of the boundaries of the Marine Protected Areas. The "geometry" column has the information of the boundaries. The geometry will give us the latitude and longitude, which we will use to plot the boundary of each Marine Protected Area on our map. 
 
 To set up the map, we will first map a blank map of the state of California. We will use built-in "leaflet" library to make our map. Let's set it up so that we can see the ocean topography using the Esri Ocean Basemap. We'll save our map as "CaliforniaMap". To print the CaliforniaMap, we'll type in CaliforniaMap. 
-
 
 ```{r}
 CaliforniaMap = leaflet() %>% # start an empty map
@@ -83,14 +81,13 @@ ChosenMPA_hull = st_convex_hull(ChosenMPA$geometry)
 ChosenMPA_text = st_as_text(ChosenMPA_hull)
 ```
 
-Introduce OBIS
+Introduce OBIS here.
 ```{r}
 SpeciesOccurence = occurrence(geometry = ChosenMPA_text)
 ```
 
-Sum up the unique species.
+We're interested in the number of unique species that occur in the chosen MPA. Let's group our data to find out how many of each species was observed. 
 ```{r}
-# Let's sum up the unique species that occur in the chosen MPA
 if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is an available column..
   SpeciesOccurence$individualCount <- suppressWarnings(as.numeric(SpeciesOccurence$individualCount)) #introduces NAs
   SpeciesOccurence$individualCount[is.na(SpeciesOccurence$individualCount)] <- 1 #convert NANs to 1; I'm assuming that if it's listed, there was at least one count
@@ -100,22 +97,33 @@ if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is a
 }
 ```
 
-Now that our data is ready, let's visualize it and see what patterns we can find! 
+It's time to start visualizing our data!
+
 We'll start with visualizing the different phyla that exist within the MPA. A phylum is a level of classification or taxonmic rank that allows scientists to categrozie animals. Mammals are in the chordate phylum while insects, spiders, millipeds, and crustaceans are in the arthropod phylum. Let's look to see what phyla exist in this MPA.
 
 ```{r}
 Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum) #aggregate the data by phyla
 
-# Define the number of colors you want
-nb.cols <- 18
-mycolors <- colorRampPalette(brewer.pal(8, "Blues"))(nb.cols)
-
 #Create a pie chart to visualize the proportion of phyla found in the MPA
-bp<- ggplot(Phylum, aes(x="", y=x, fill=Category))+
-  geom_bar(width = 1, stat = "identity")
-pie = bp + coord_polar("y", start=0)
-pie + scale_fill_brewer("Blues") +
-  theme(axis.text.x = element_blank())
+data = Phylum %>% 
+  mutate(per=x/sum(x)) %>% 
+  arrange(desc(Category))
+data$label = scales::percent(data$per)
+
+#Plot the pie chart and only display the percentages if there are less than 8 phyla so it doesn't get too crowded on the pie chart
+if (nrow(data) > 8){
+  ggplot(data=data)+
+  geom_bar(aes(x="", y=per, fill=Category), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+
+  ggtitle("Proportion of Phyla in MPA of Interest")
+}else{
+  ggplot(data=data)+
+  geom_bar(aes(x="", y=per, fill=Category), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+geom_text(aes(x=1, y = cumsum(per) - per/2, label=label))+
+  ggtitle("Proportion of Phyla in MPA of Interest")
+}
 ```
 
 
