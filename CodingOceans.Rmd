@@ -1,11 +1,25 @@
 ---
 title: "Marine Protected Area Activity"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
-Some R packages will need to be installed so that we can see exactly what is going in with our data. Run the code chunk below to install the packages necessary for this activity. If the package is already installed, the script will only load the package without re-installing it.
 
-```{r}
+
+
+The U.S. has established nearly 1,000 Marine Protected Areas to protect important places in our ocean, estuaries, coastal waters, and Great Lakes. Marine Protected Areas strive to combat climate change, conserve cultural heritage, and protect marine organisms. 
+
+Marine protected areas allow for ecological connectivity, and serve as protected "stepping stones" for marine organisms. Let's make a map so that we can see all of these stepping stones off of the Coast of California.
+
+
+
+
+
+Some R packages will need to be installed so that we can see exactly what is going in with the data that we are going to look at. Run the code chunk below to install the packages necessary for this activity. If the package is already installed, the script will only load the package without re-installing it.
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+options(warn = -1)
 ## First specify the packages of interest -- if you need to any packages in the future, add them here
 packages = c("sf", "robis","RColorBrewer",
              "ggplot2", "dplyr", "leaflet")
@@ -22,35 +36,61 @@ package.check <- lapply(
 )
 ```
 
-The U.S. has established nearly 1,000 Marine Protected Areas to protect important places in our ocean, estuaries, coastal waters, and Great Lakes. Marine Protected Areas strive to combat climate change, conserve cultural heritage, and protect marine organisms. 
 
-Marine protected areas allow for ecological connectivity, and serve as protected "stepping stones" for marine organisms. Let's make a map so that we can see all of these stepping stones off of the Coast of California.
+
 
 First, we'll need to load in some data that has information on all of the Marine Protected Areas in the United States. The data is in the form of a "shape file". We will load this file and call it "DataBase". 
 
+
+
+
+
 ```{r}
 # loading our database by setting the directory where the shape file lives with the file extension (.shp)
-DataBase = st_read("C:/Users/nposd/Documents/Outreach/MPAs/mpa_inventory_2014_public_shp.shp")
+DataBase = st_read("/Users/vanessazobell/Documents/SIO/Outreach/mpa_inventory_2014_public_shp/mpa_inventory_2014_public_shp.shp")
 ```
 
+
+
+
 For this example, let's look at the Marine Protected areas off the Coast of California. When looking at our database, we see that there is a column titled "State", and each row contains the state that the Marine Protected Area is in. We will filter our database to pull out all of the Marine Protected Areas that are in the "State" of "California" using the following code chunk. We will call this new database "California". 
+
+
+
+
 
 ```{r}
 California = filter(DataBase, State == "California")
 ```
 
+
+
+
+
 There are 185 Marine Protected Areas in our California database! Let's make a map to see all of the boundaries of the Marine Protected Areas. The "geometry" column has the information of the boundaries. The geometry will give us the latitude and longitude, which we will use to plot the boundary of each Marine Protected Area on our map. 
 
 To set up the map, we will first map a blank map of the state of California. We will use built-in "leaflet" library to make our map. Let's set it up so that we can see the ocean topography using the Esri Ocean Basemap. We'll save our map as "CaliforniaMap". To print the CaliforniaMap, we'll type in CaliforniaMap. 
 
-```{r}
+
+
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
 CaliforniaMap = leaflet() %>% # start an empty map
    addProviderTiles("Esri.OceanBasemap") %>% # add the ocean basemap 
    fitBounds( -124, 41, -116, 32) # zoom in to the california area
 
 CaliforniaMap # print the map
 ```
+
+
+
+
 Nice! Now let's add the boundaries of all of the Marine Protected Areas that are on the California Coast. We will loop through each individual Marine Protected area, and plot the latitudes and longitudes on our California map, that way, we can see ALL of the Marine Protected Areas on our map together. We will use "addPolygons" to add each Marine Protected Area's boundary. You can pick the color that you would like to make the boundary in the "color" section of "addPolygons". For this example, I made the color red, but you can change it to whatever color you would like!
+
+
+
+
 
 ```{r}
 
@@ -69,9 +109,17 @@ CaliforniaMap = CaliforniaMap  %>%
 CaliforniaMap # print the map
 ```
 
+
+
+
+
 Wow, California has a LOT of Marine Protected Areas! Let's analyze some data from Marine Protected Areas in California to see exactly how they have helped in the protection of marine organisms! We will need to connect to an online databases to access information about marine organisms. 
 
 Let's choose a specific Marine Protected Area we want to learn more about. 
+
+
+
+
 ```{r}
 SiteName = ('Soquel Canyon State Marine Conservation Area')  #Look at the California data frame in your global environment...
 # and choose the MPA you want to learn more about
@@ -81,12 +129,20 @@ ChosenMPA_hull = st_convex_hull(ChosenMPA$geometry)
 ChosenMPA_text = st_as_text(ChosenMPA_hull)
 ```
 
-Introduce OBIS here.
+Let's look at the animals that have been sited in our chosen Marine Protected Area! To do this, we will be using an online database called "Ocean Biodiversity Information System" (OBIS for short). This database pulls information from hundreds of different observers, so we can look at what animals have been at our site over time. First, we'll just pull out all biological organisms occurences at Soqual Canyon State Marine Conservation area with the code chunk below. 
+
 ```{r}
 SpeciesOccurence = occurrence(geometry = ChosenMPA_text)
 ```
 
-We're interested in the number of unique species that occur in the chosen MPA. Let's group our data to find out how many of each species was observed. 
+
+
+
+Let's start to look at which species are in this area, and how many there are! First we'll need to get organized... We'll make a column in the dataframe for the counts of each species.  We'll need to group our data data to find out how many of each species was observed. 
+
+
+
+
 ```{r}
 if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is an available column..
   SpeciesOccurence$individualCount <- suppressWarnings(as.numeric(SpeciesOccurence$individualCount)) #introduces NAs
@@ -97,21 +153,43 @@ if ("individualCount" %in% colnames(SpeciesOccurence)){ #if individualCount is a
 }
 ```
 
-It's time to start visualizing our data!
 
-First let's look at what time period our samples were from by plotting a histogram of the years the samples were taken.
+
+
+
+It's time to start visualizing our data! First let's look at what time period our samples were from by plotting a histogram of the years the samples were taken. 
 ```{r}
+
+Year = SpeciesOccurence$date_year
+
 ggplot(SpeciesOccurence, aes(x=date_year)) + geom_histogram(binwidth = 1)+
   labs(title="Histogram of Observation Year", x="Year", y = "Count")
+
+
 ```
 
+
+
+Wow! Observations data back to 1904? There must be a museum specimen in there!
+
 Now let's look at what depth our samples were from by plotting a histogram of the maximum depth the samples were taken.
+
+
+
 ```{r}
 ggplot(SpeciesOccurence, aes(x=maximumDepthInMeters)) + geom_histogram(binwidth = 10)+
   labs(title="Histogram of Maximum Sample Depth in meters", x="Depth (meters)", y = "Count")
 ```
 
+
+
+Cool! It looks like most observations were made near the sea surface (around 0 m deep), but some reached down to below 600 m! They must've had a submarine, or a robot for that one!
+
+
 We'll start with visualizing the different phyla that exist within the MPA. A phylum is a level of classification or taxonmic rank that allows scientists to categrozie animals. Mammals are in the chordate phylum while insects, spiders, millipeds, and crustaceans are in the arthropod phylum. Let's look to see what phyla exist in this MPA.
+
+
+
 
 ```{r}
 Phylum <- aggregate(SpeciesOccurence$Count, by=list(Category=SpeciesOccurence$phylum),FUN=sum) #aggregate the data by phyla
@@ -139,21 +217,48 @@ if (nrow(data) > 8){
 }
 ```
 
-Let's look at the top then animals that were observed in the MPA.
+
+
+
+
+It seems like Arthopoda were the most common species observed at this site, followed by chordata, and mollusca!
+
+
+Let's look at the top ten most common animals that were observed in the MPA.
+
+
+
+
+
 ```{r}
 animals = filter(SpeciesOccurence, kingdom == "Animalia") #filtering the dataframe to pull out the animals
 TenAnimals = data.frame(sort(table(animals$scientificName), decreasing = TRUE)[1:10]) #finding the 10 animals that occur most often in the dataframe
 print(TenAnimals)
 ```
 
-Now let's take a look at the most common animal in the MPA and see when it occured.
+
+
+So porifera (sea sponge) was the most common with 1590 occurences, and Megaptera novaengliae (humpback whale) is the second most common with 791 occurences. 
+
+Now let's take a look at the most common animal (porifera) in the MPA and see when it occured.
+
+
+
+
+
 ```{r}
 MostCommon_Animal = filter(SpeciesOccurence, scientificName == TenAnimals$Var1[[1]]) #filter for the most commonly occuring animal
 
 #Plot the most commonly occuring animal in the MPA over time to see when it occured and how many of them were observed at that time
 ggplot(MostCommon_Animal, aes(x = date_year)) + 
-  geom_histogram(color = "darkblue", fill = "lightblue") + 
-  labs(title = "Histogram of Most Commonly Occuring Animal in the MPA", x = "Year", y = "# of Kelp Bass") # make a histogram showing the most commonly occuring animal
+  geom_histogram(color = "darkblue", fill = "lightblue", bins = 50) + 
+  labs(title = "Histogram of Most Commonly Occuring Animal in the MPA", x = "Year", y = "# of Occurences") # make a histogram showing the most commonly occuring animal
 ```
 
+
+
+
+Porifera have been around for awhile! There are two big spikes, one around 1992, and another around 2007. 
+
+Now it's your turn to pick a species!
 
